@@ -278,8 +278,6 @@ impl State {
             index_buffer,
             num_indices,
             diffuse_texture,
-            diffuse_texture_view,
-            diffuse_sampler,
             diffuse_bind_group
         }
     }

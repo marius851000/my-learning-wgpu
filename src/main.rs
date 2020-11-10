@@ -1,4 +1,5 @@
 mod texture;
+use anyhow::Context;
 
 use futures::executor::block_on;
 use winit::{
@@ -90,13 +91,15 @@ fn main() {
                 }
             }
             Event::RedrawRequested(_) => {
+                println!("redrawn requested");
                 state.update();
-                state.render();
+                if let Err(err) = state.render() {
+                    println!("error redrawing: {:?}", err);
+                };
             }
             Event::MainEventsCleared => {
-                // do not request redraw, as it will redraw pre resizing in my condition.
-                //TODO: understand exactly why this happen.
-                //window.request_redraw();
+                println!("main event cleared");
+                window.request_redraw();
             }
             _ => {}
         }
@@ -283,6 +286,7 @@ impl State {
     }
 
     fn resize(&mut self, new_size: winit::dpi::PhysicalSize<u32>) {
+        println!("resize");
         self.size = new_size;
         self.sc_desc.width = new_size.width;
         self.sc_desc.height = new_size.height;
@@ -295,11 +299,12 @@ impl State {
 
     fn update(&mut self) {}
 
-    fn render(&mut self) {
+    fn render(&mut self) -> anyhow::Result<()> {
+        println!("render");
         let frame = self
             .swap_chain
             .get_current_frame()
-            .expect("Timeout getting texture")
+            .with_context(|| "Timeout getting texture")?
             .output;
 
         let mut encoder = self
@@ -334,5 +339,7 @@ impl State {
         }
 
         self.queue.submit(std::iter::once(encoder.finish()));
+
+        Ok(())
     }
 }
